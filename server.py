@@ -4,8 +4,10 @@ import tornado.web
 import tornado.options
 
 from tornado.options import define, options
-from handler import *
-from handler.app import app
+import services.index
+import services.image
+import services.k8s
+from services.app import app
 
 define("port", default=8080, help="run on the given port", type=int)
 define("registry", default="http://192.168.0.231:5000",

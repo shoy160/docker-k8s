@@ -1,0 +1,12 @@
+version: '3'
+services:
+  docker-k8s:
+    build: .
+    image: docker-k8s
+    ports:
+      - "9101:8080"
+    args: 
+      - --page-size=10
+      - --registry="http://192.168.0.231:5000"
+    privileged: true
+    restart: always

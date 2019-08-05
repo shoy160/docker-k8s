@@ -20,6 +20,10 @@
         right: 30px;
         top: 7px;
       }
+      tfoot {
+        background-color: #f9f9f9;
+        color: #666;
+      }
     </style>
   </head>
   <body>
@@ -37,7 +41,7 @@
         </ul>
       </div>
       <div class="page-header">
-        <h2>{{ image }} Tags</h2>
+        <h2>{{ image }} <small>Tags</small></h2>
       </div>
       <table class="table table-striped table-bordered">
         <thead>
@@ -47,6 +51,9 @@
             <th>Layers</th>
             <th>Size</th>
             <th>Created</th>
+            {% if k8s != None %}
+            <th>Published</th>
+            {% end %}
             <th>Action</th>
           </tr>
         </thead>
@@ -63,6 +70,9 @@
             <td>{{ item['count'] }}</td>
             <td>{{ item['size'] }}</td>
             <td>{{ item['time'] }}</td>
+            {% if k8s != None %}
+            <td>{{ item['publish_time'] }}</td>
+            {% end %}
             <td>
               {% if k8s != None %}
               <a href="#" class="btn btn-success btn-sm b-publish">发布K8S</a>
@@ -73,6 +83,18 @@
           </tr>
           {% end %}
         </tbody>
+        <tfoot>
+          <tr>
+            {% if k8s != None %}
+            <td colspan="7" class="d-footer">
+              {% else %}
+            </td>
+
+            <td colspan="6" class="d-footer">
+              {% end %} 共 <b>{{ total }}</b> 条记录
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
     <div class="modal fade" tabindex="-1" role="dialog" id="msgModal">
@@ -120,11 +142,13 @@
               .unbind('click')
               .bind('click', function() {
                 var $t = $(this)
-                $t.attr('disabled','disabled').addClass('disabled').html('发布中...')
+                $t.attr('disabled', 'disabled')
+                  .addClass('disabled')
+                  .html('发布中...')
                 $.ajax({
                   url: '/api/k8s/' + image,
                   type: 'put',
-                  dataType:'json',                  
+                  dataType: 'json',
                   data: {
                     image: image,
                     tag: tag
@@ -141,8 +165,10 @@
                   error: function(json) {
                     alert(json.responseJSON.message || '发布失败')
                   },
-                  complete:function(){
-                    $t.removeAttr('disabled').removeClass('disabled').html('确认')
+                  complete: function() {
+                    $t.removeAttr('disabled')
+                      .removeClass('disabled')
+                      .html('确认')
                   }
                 })
               })
@@ -161,11 +187,13 @@
               .unbind('click')
               .bind('click', function() {
                 var $t = $(this)
-                $t.attr('disabled','disabled').addClass('disabled').html('删除中...')
+                $t.attr('disabled', 'disabled')
+                  .addClass('disabled')
+                  .html('删除中...')
                 $.ajax({
                   url: '/api/image/' + image,
                   type: 'delete',
-                  dataType:'json',
+                  dataType: 'json',
                   data: {
                     tag: tag
                   },
@@ -181,8 +209,10 @@
                   error: function(json) {
                     alert(json.responseJSON.message || '删除失败')
                   },
-                  complete:function(){
-                    $t.removeAttr('disabled').removeClass('disabled').html('确认')
+                  complete: function() {
+                    $t.removeAttr('disabled')
+                      .removeClass('disabled')
+                      .html('确认')
                   }
                 })
               })

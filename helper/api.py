@@ -40,7 +40,7 @@ class RegistryApi(object):
             url = self.registry_url + api
             client = AsyncHTTPClient()
             req = HTTPRequest(url=url,
-                              method='GET', headers=headers)
+                              method='GET', headers=headers, validate_cert=False)
             resp = await client.fetch(req)
             return json.loads(resp.body)
             # result = s.get(url, verify=False, headers=headers).content.strip()
@@ -87,6 +87,7 @@ class RegistryApi(object):
         api = "/v2/" + image + "/tags/list"
         result = await self.__get_api(api)
         tags = result.get('tags', [])
+        total = len(tags)
         tags_list = []
         for tag in tags:
             detail = await self.__tag_detail(image, tag)
@@ -94,7 +95,7 @@ class RegistryApi(object):
         # print(tags_list)
         tags_list = sorted(
             tags_list, key=lambda k: k["time"], reverse=True)
-        return tags_list
+        return total, tags_list
 
     async def get_images(self, page=1, size=15, keyword=''):
         ''' 获取镜像分页列表

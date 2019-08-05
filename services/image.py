@@ -36,8 +36,13 @@ class ImageTagsHandler(BaseHandler):
         if image is None or image == '':
             self.json_error('缺少镜像名称参数')
             return
-        tag_list = await self.registry_api.get_images_tags(image)
-        self.json_success(tag_list)
+        # page = int(self.get_argument("page", 1))
+        # size = int(self.get_argument('size', options.page_size))
+        total, tag_list = await self.registry_api.get_images_tags(image)
+        self.json_success({
+            'total': total,
+            'data': tag_list
+        })
 
     # 依赖delete_docker_registry_image
     @tornado.web.authenticated
@@ -56,7 +61,7 @@ class ImageTagsHandler(BaseHandler):
         # self.json_success({
         #     'image': image,
         #     'tag': tag
-        # })        
+        # })
         if 'REGISTRY_DATA_DIR' in os.environ:
             registry_data_dir = os.environ['REGISTRY_DATA_DIR']
         else:

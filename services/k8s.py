@@ -1,6 +1,6 @@
 # coding:utf-8
 
-from helper.utils import call_command
+from helper.utils import call_command, set_version
 from helper.k8s import get_deploy_image
 from services.app import BaseHandler, app
 import tornado.web
@@ -53,18 +53,19 @@ class K8sHandler(BaseHandler):
         if c_image == None:
             self.json_error('deploy not exists')
             return
-        image = "{0}/{1}".format(self.registry, image)
+        t_image = "{0}/{1}".format(self.registry, image)
         if tag != '' and tag != 'latest':
-            image += ":%s" % tag
-        if c_image == image:
+            t_image += ":%s" % tag
+        if c_image == t_image:
             # 版本相同时
             command = 'kubectl delete rs -l app={0} -n {1}'.format(deploy, ns)
         else:
             # 版本不同时
             command = 'kubectl set image deployment {0} {1}={2} -n {3}'.format(
-                deploy, deploy, image, ns)
+                deploy, deploy, t_image, ns)
         status, msg = call_command(command)
         if status:
             self.json_success(msg)
+            set_version(deploy, image, tag)
         else:
             self.json_error('更新K8S失败')

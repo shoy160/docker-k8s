@@ -1,5 +1,10 @@
 FROM python:3-alpine
 
+# 设置时区
+RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" > /etc/timezone \
+    && apk del tzdata
+
 COPY . /publish
 RUN pip install -r /publish/requirements.txt -i https://pypi.douban.com/simple
 WORKDIR /publish

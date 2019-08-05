@@ -4,8 +4,12 @@ import requests
 import json
 import math
 import traceback
+import logging
 from dateutil.tz import tz
 from datetime import datetime
+from helper.utils import format_size
+from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import HTTPRequest
 
 
 def get_normal_time(time):
@@ -26,54 +30,76 @@ def get_local_time(time):
 class RegistryApi(object):
     def __init__(self, registry_url):
         self.registry_url = registry_url
+        self.logger = logging.getLogger()
 
-    def __get_api(self, api):
+    async def __get_api(self, api, headers={}):
+
         try:
-            s = requests.session()
-            s.keep_alive = False
+            # s = requests.session()
+            # s.keep_alive = False
             url = self.registry_url + api
-            result = s.get(url, verify=False).content.strip()
-            # print(result)
-            return json.loads(result)
+            client = AsyncHTTPClient()
+            req = HTTPRequest(url=url,
+                              method='GET', headers=headers)
+            resp = await client.fetch(req)
+            return json.loads(resp.body)
+            # result = s.get(url, verify=False, headers=headers).content.strip()
+            # # print(result)
+            # return json.loads(result)
         except Exception as e:
             traceback.print_exc()
             self.logger.warn(e)
             return None
 
-    def __image_list(self):
+    async def __image_list(self):
         api = "/v2/_catalog"
-        result = self.__get_api(api)
+        result = await self.__get_api(api)
         return result.get("repositories")
 
-    def __tag_time(self, image, tag):
+    async def __tag_layers(self, image, tag):
+        api = "/v2/{0}/manifests/{1}".format(image, tag)
+        result = await self.__get_api(
+            api, {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'})
+        return result.get('layers')
+
+    async def __tag_detail(self, image, tag):
         ''' 获取镜像创建时间
         :param  image:string
         :param  tags:array
         '''
-        api = "/v2/" + image + "/manifests/" + tag
-        result = self.__get_api(api)
-        time = get_local_time(
-            json.loads(result.get("history")[0].get("v1Compatibility")).get("created"))
-        return time
+        api = "/v2/{0}/manifests/{1}".format(image, tag)
+        result = await self.__get_api(api)
+        topLayer = json.loads(result.get("history")[0].get("v1Compatibility"))
+        layers = await self.__tag_layers(image, tag)
+        id = topLayer.get('id')
+        count = len(layers)
+        size = 0
+        for layer in layers:
+            size += int(layer.get('size'))
 
-    def get_images_tags(self, image):
+        time = get_local_time(topLayer.get("created"))
+        return {'id': id[0:11], 'name': tag, 'count': count, 'size': format_size(size), 'time': time}
+
+    async def get_images_tags(self, image):
         ''' 获取镜像Tags
         :param  image:string    镜像名称
         '''
         api = "/v2/" + image + "/tags/list"
-        tags = self.__get_api(api).get('tags', [])
-        tags_time = []
+        result = await self.__get_api(api)
+        tags = result.get('tags', [])
+        tags_list = []
         for tag in tags:
-            tags_time.append(
-                {"tag": tag, "time": self.__tag_time(image, tag)})
-        tags_time = sorted(
-            tags_time, key=lambda k: k["time"], reverse=True)
-        return tags_time
+            detail = await self.__tag_detail(image, tag)
+            tags_list.append(detail)
+        # print(tags_list)
+        tags_list = sorted(
+            tags_list, key=lambda k: k["time"], reverse=True)
+        return tags_list
 
-    def get_images(self, page=1, size=15, keyword=''):
+    async def get_images(self, page=1, size=15, keyword=''):
         ''' 获取镜像分页列表
         '''
-        docker_images = self.__image_list()
+        docker_images = await self.__image_list()
         images_tags = {}
         start = (page-1)*size
         if keyword != '':
@@ -85,33 +111,13 @@ class RegistryApi(object):
                 docker_images.append(image)
         for image in docker_images[start:start + size]:
             image_api = "/v2/" + image + "/tags/list"
-            tags = self.__get_api(image_api).get('tags', [])
-            tags_time = []
-            for tag in tags:
-                tags_time.append(
-                    {"tag": tag, "time": self.__tag_time(image, tag)})
-            tags_time = sorted(
-                tags_time, key=lambda k: k["time"], reverse=True)
-            images_tags.setdefault(image, tags_time)
+            result = await self.__get_api(image_api)
+            tags = result.get('tags', [])
+            # tags_time = []
+            # for tag in tags:
+            #     tags_time.append(
+            #         {"tag": tag, "time": self.__tag_time(image, tag)})
+            # tags_time = sorted(
+            #     tags_time, key=lambda k: k["time"], reverse=True)
+            images_tags.setdefault(image, len(tags))
         return len(docker_images), images_tags
-
-    def search_images(self, key):
-        ''' 搜索镜像
-        '''
-        docker_images = self.__image_list()
-        images_tags = {}
-        count = 0
-        for image in docker_images:
-            if key not in image:
-                continue
-            api = "/v2/" + image + "/tags/list"
-            tags = self.__get_api(api).get('tags', [])
-            tags_time = []
-            for tag in tags:
-                tags_time.append(
-                    {"tag": tag, "time": self.__tag_time(image, tag)})
-            tags_time = sorted(
-                tags_time, key=lambda k: k["time"], reverse=True)
-            images_tags.setdefault(image, tags_time)
-            count += 1
-        return count, images_tags

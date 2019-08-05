@@ -32,24 +32,28 @@ class RouterConfig(tornado.web.Application):
 
 app = RouterConfig(
     handlers=[
-        (r'/css/(.*)', tornado.web.StaticFileHandler, {'path': 'wwwroot/css'}),
+        (r'/css/(.*)', tornado.web.StaticFileHandler, {'path': 'views/css'}),
         (r'/images/(.*)', tornado.web.StaticFileHandler,
-         {'path': 'wwwroot/image'}),
-        (r'/js/(.*)', tornado.web.StaticFileHandler, {'path': 'wwwroot/js'}),
+         {'path': 'views/image'}),
+        (r'/js/(.*)', tornado.web.StaticFileHandler, {'path': 'views/js'}),
     ],
     cookie_secret='ulb7bEIZmwpV23Df3',
     compress_response=True,
-    template_path=os.path.join(os.path.dirname(__file__), "../wwwroot"))
+    template_path=os.path.join(os.path.dirname(__file__), "../views"))
 
 
 class BaseHandler(RequestHandler):
     def __init__(self, application, request, **kwargs):
         if 'REGISTRY_URL' in os.environ:
-            registry = os.environ['REGISTRY_URL']
+            self.registry_url = os.environ['REGISTRY_URL']
         else:
-            registry = options.registry
+            self.registry_url = options.registry_url
+        if 'DOCKER_REGISTRY' in os.environ:
+            self.registry = os.environ['DOCKER_REGISTRY']
+        else:
+            self.registry = options.registry
 
-        self.registry_api = RegistryApi(registry)
+        self.registry_api = RegistryApi(self.registry_url)
         self.logger = logging.getLogger()
         return super().__init__(application, request, **kwargs)
 
@@ -57,7 +61,10 @@ class BaseHandler(RequestHandler):
         pass
 
     def get_current_user(self):
-        return self.get_secure_cookie("username")
+        return self.get_secure_cookie("__registry_u")
+
+    def get_login_url(self):
+        return "/login"
 
     def json_success(self, json=None):
         result = {
@@ -66,8 +73,8 @@ class BaseHandler(RequestHandler):
             'message': '',
             'data': json
         }
-        self.set_header('Content-type', 'application/json')
-        return self.write(json_encode(result))
+        self.set_header('Content-Type', 'application/json')
+        self.finish(result)
 
     def json_error(self, message, code=-1):
         result = {
@@ -75,5 +82,6 @@ class BaseHandler(RequestHandler):
             'code': code,
             'message': message
         }
-        self.set_header('Content-type', 'application/json')
-        return self.write(json_encode(result))
+        self.set_header('Content-Type', 'application/json')
+        self.set_status(500)
+        self.finish(result)

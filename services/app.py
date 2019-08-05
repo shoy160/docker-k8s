@@ -39,7 +39,9 @@ app = RouterConfig(
     ],
     cookie_secret='ulb7bEIZmwpV23Df3',
     compress_response=True,
-    template_path=os.path.join(os.path.dirname(__file__), "../views"))
+    template_path=os.path.join(os.path.dirname(__file__), "../views"),
+    static_path=os.path.join(os.path.dirname(__file__), "../static")
+)
 
 
 class BaseHandler(RequestHandler):

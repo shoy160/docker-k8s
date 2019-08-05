@@ -4,18 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link
-      href="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.bootcss.com/vue-toasted/1.1.27/vue-toasted.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.bootcss.com/font-awesome/5.9.0/css/all.min.css"
-      rel="stylesheet"
-    />
+    <link rel="icon" href="{{ static_url('favicon.ico')}}">
+    <link href="{{ static_url('css/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ static_url('css/vue-toasted.min.css') }}" rel="stylesheet" />
+    <!-- <link href="{{ static_url('css/font-awesome.min.css') }}" rel="stylesheet" /> -->
+    <link href="https://cdn.bootcss.com/font-awesome/5.9.0/css/all.min.css" rel="stylesheet">
     <title>登 录</title>
     <style>
       body {
@@ -77,12 +70,16 @@
         </form>
       </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="{{ static_url('js/vue.min.js') }}"></script>
+    <script src="{{ static_url('js/vue-resource.min.js') }}"></script>
+    <script src="{{ static_url('js/vue-toasted.min.js') }}"></script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
     <!-- 生产环境版本，优化了尺寸和速度 -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
     <!-- <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script> -->
-    <script src="https://cdn.bootcss.com/vue-resource/1.5.1/vue-resource.min.js"></script>
-    <script src="https://cdn.bootcss.com/vue-toasted/1.1.27/vue-toasted.min.js"></script>
+    <!-- <script src="https://cdn.bootcss.com/vue-resource/1.5.1/vue-resource.min.js"></script> -->
+    <!-- <script src="https://cdn.bootcss.com/vue-toasted/1.1.27/vue-toasted.min.js"></script> -->
     <script>
       Vue.use(Toasted, {
         iconPack: 'fontawesome',

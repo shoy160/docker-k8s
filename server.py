@@ -21,13 +21,12 @@ define("enable-delete", default=False, help="Allow Delete Image", type=bool)
 
 
 if __name__ == "__main__":
-    print('micro-market'.split('/')[-1])
-#     # 转换命令行
-#     tornado.options.parse_command_line()
-#     http_server = tornado.httpserver.HTTPServer(app)
-#     http_server.listen(options.port)
-#     # http_server.bind(options.port)
-#     # http_server.start(2)
-#     logger = logging.getLogger('server')
-#     logger.info("listening on " + str(options.port))
-#     tornado.ioloop.IOLoop.instance().start()
+    # 转换命令行
+    tornado.options.parse_command_line()
+    http_server = tornado.httpserver.HTTPServer(app)
+    http_server.listen(options.port)
+    # http_server.bind(options.port)
+    # http_server.start(2)
+    logger = logging.getLogger('server')
+    logger.info("listening on " + str(options.port))
+    tornado.ioloop.IOLoop.instance().start()

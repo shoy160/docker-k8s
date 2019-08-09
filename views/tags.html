@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="icon" href="{{ static_url('favicon.ico')}}">
+    <link rel="icon" href="{{ static_url('favicon.ico') }}" />
     <link href="{{ static_url('css/bootstrap.min.css') }}" rel="stylesheet" />
     <script src="{{ static_url('js/jquery.min.js') }}"></script>
     <script src="{{ static_url('js/bootstrap.min.js') }}"></script>
@@ -58,9 +58,13 @@
         <tbody>
           {% for item in list %}
           <tr data-image="{{ image }}" data-tag="{{ item['name'] }}">
-            <td>{{ item['id'] }}</td>
             <td>
-              {{ item['name'] }}
+              <a href="/tag/{{ image }}/{{ item['name'] }}">{{ item['id'] }}</a>
+            </td>
+            <td>
+              <a href="/tag/{{ image }}/{{ item['name'] }}">
+                {{ item['name'] }}
+              </a>
               {% if 'is_current' in item and item['is_current'] %}
               <sup class="text-success"><b>k8s</b></sup>
               {% end %}

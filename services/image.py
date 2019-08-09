@@ -92,3 +92,14 @@ class ImageTagsHandler(BaseHandler):
         #     self.json_success(msg)
         # else:
         #     self.json_error('删除镜像失败')
+
+
+@app.route('/api/tag/(.*)/(.*)')
+class TagDetailHandler(BaseHandler):
+
+    @tornado.web.authenticated
+    async def get(self, *args, **kwargs):
+        image = args[0]
+        tag = args[1]
+        result = await self.registry_api.get_image_history(image, tag)
+        self.json_success(result)

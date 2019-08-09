@@ -68,3 +68,14 @@ class ImageViewHandler(BaseHandler):
                     tag['publish_time'] = ''
         self.render('tags.html', image=image, total=total,
                     list=tag_list, user=self.current_user, k8s=version, delete=options.enable_delete)
+
+
+@app.route('/tag/(.*)/(.*)')
+class TagViewHandler(BaseHandler):
+    @tornado.web.authenticated
+    async def get(self, *args):
+        image = args[0]
+        tag = args[1]
+        result = await self.registry_api.get_image_history(image, tag)
+        self.render('history.html', user=self.current_user,
+                    image=image, tag=tag, count=result['count'], size=result['size'], list=result['history'])

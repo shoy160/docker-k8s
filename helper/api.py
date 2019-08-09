@@ -1,5 +1,6 @@
 # coding:utf-8
 
+import re
 import requests
 import json
 import math
@@ -62,6 +63,15 @@ class RegistryApi(object):
             api, {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'})
         return result.get('layers')
 
+    async def __tag_size(self, image, tag):
+        ''' 获取镜像大小
+        '''
+        layers = await self.__tag_layers(image, tag)
+        size = 0
+        for layer in layers:
+            size += int(layer.get('size'))
+        return len(layers), size
+
     async def __tag_detail(self, image, tag):
         ''' 获取镜像创建时间
         :param  image:string
@@ -70,15 +80,36 @@ class RegistryApi(object):
         api = "/v2/{0}/manifests/{1}".format(image, tag)
         result = await self.__get_api(api)
         topLayer = json.loads(result.get("history")[0].get("v1Compatibility"))
-        layers = await self.__tag_layers(image, tag)
         id = topLayer.get('id')
-        count = len(layers)
-        size = 0
-        for layer in layers:
-            size += int(layer.get('size'))
-
+        # 创建时间
         time = get_local_time(topLayer.get("created"))
+        # 镜像层数 & 大小
+        count, size = await self.__tag_size(image, tag)
         return {'id': id[0:11], 'name': tag, 'count': count, 'size': format_size(size), 'time': time}
+
+    async def get_image_history(self, image, tag):
+        api = "/v2/{0}/manifests/{1}".format(image, tag)
+        result = await self.__get_api(api)
+        history = []
+        for item in result.get('history'):
+            layer = json.loads(item.get('v1Compatibility'))
+            id = layer.get('id')[0:11]
+            cmd = layer.get('container_config').get('Cmd')[-1]
+            replace_re = re.compile('^/bin/sh -c (#\(nop\)\s+)?')
+            cmd = replace_re.sub('', cmd)
+            replace_re = re.compile('\n')
+            cmd = replace_re.sub('<br/>', cmd)
+            replace_re = re.compile('\s{2,}')
+            cmd = replace_re.sub(' ', cmd)
+            time = get_local_time(layer.get("created"))
+            history.append({
+                'id': id,
+                'cmd': cmd,
+                'time': time
+            })
+        count, size = await self.__tag_size(image, tag)
+
+        return {'size': format_size(size), 'count': count, 'history': history}
 
     async def get_images_tags(self, image):
         ''' 获取镜像Tags

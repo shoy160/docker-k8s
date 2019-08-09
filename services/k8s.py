@@ -17,6 +17,7 @@ class K8sHandler(BaseHandler):
             self.json_error('k8s plugin is disabled')
             return
         deploy = args[0]
+        deploy = deploy.split('/')[-1]
         ns = self.get_argument('ns', options.namespace)
         image = get_deploy_image(deploy, ns)
 
@@ -38,6 +39,7 @@ class K8sHandler(BaseHandler):
             self.json_error('k8s plugin is disabled')
             return
         deploy = args[0]
+        deploy = deploy.split('/')[-1]
         image = self.get_argument('image', deploy)
         tag = self.get_argument('tag', '')
         ns = self.get_argument('ns', options.namespace)

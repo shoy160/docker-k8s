@@ -6,6 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <link rel="icon" href="{{ static_url('favicon.ico') }}" />
     <link href="{{ static_url('css/bootstrap.min.css') }}" rel="stylesheet" />
+    <script src="{{ static_url('js/jquery.min.js') }}"></script>
+    <script src="{{ static_url('js/bootstrap.min.js') }}"></script>
     <title>{{ image }} - {{ tag }} History</title>
     <style>
       .container {
@@ -53,6 +55,7 @@
           <tr>
             <th style="width: 110px">ID</th>
             <th>CMD</th>
+            <th style="width: 120px">Size</th>
             <th style="width: 160px">Created</th>
           </tr>
         </thead>
@@ -61,13 +64,14 @@
           <tr>
             <td>{{ item['id'] }}</td>
             <td>{% raw item['cmd'] %}</td>
+            <td>{{ item['size'] }}</td>
             <td>{{ item['time'] }}</td>
           </tr>
           {% end %}
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="3" class="d-footer">
+            <td colspan="4" class="d-footer">
               镜像大小：<b>{{ size }}</b
               >，共 <b>{{ count }}</b> 层
             </td>

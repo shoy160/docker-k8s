@@ -22,6 +22,15 @@
         background-color: #f9f9f9;
         color: #666;
       }
+      .d-footer {
+        position: relative;
+        padding: 15px !important;
+      }
+      .d-page {
+        position: absolute;
+        right: 26px;
+        top: -12px;
+      }
     </style>
   </head>
   <body>
@@ -87,13 +96,56 @@
         </tbody>
         <tfoot>
           <tr>
-            {% if k8s != None %}
-            <td colspan="7" class="d-footer">
-              {% else %}
-            </td>
-
-            <td colspan="6" class="d-footer">
-              {% end %} 共 <b>{{ total }}</b> 条记录
+            {% set cols = 6 if k8s == None else 7 %}
+            <td colspan="{{ cols }}" class="d-footer">
+              共 <b>{{ total }}</b> 条记录
+              <nav aria-label="Page navigation" class="d-page">
+                <ul class="pagination">
+                  {% if currentPage > 1 %}
+                  <li>
+                    <a
+                      href="?page={{ currentPage - 1 }}&size={{ size }}"
+                      aria-label="上一页"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  {% else %}
+                  <li class="disabled">
+                    <a href="javascript:void(0)" aria-label="上一页">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  {% end %} {% for i in range(pages) %} {% if currentPage == i+1
+                  %}
+                  <li class="active">
+                    <a href="javascript:void(0)">{{ i + 1 }}</a>
+                  </li>
+                  {% else %}
+                  <li>
+                    <a
+                      href="?page={{ i + 1 }}&size={{ size }}"
+                      >{{ i + 1 }}</a
+                    >
+                  </li>
+                  {% end %} {% end %} {% if currentPage < pages %}
+                  <li>
+                    <a
+                      href="?page={{ currentPage + 1 }}&size={{ size }}"
+                      aria-label="下一页"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                  {% else %}
+                  <li class="disabled">
+                    <a href="javascript:void(0)" aria-label="下一页">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                  {% end %}
+                </ul>
+              </nav>
             </td>
           </tr>
         </tfoot>

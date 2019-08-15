@@ -36,9 +36,9 @@ class ImageTagsHandler(BaseHandler):
         if image is None or image == '':
             self.json_error('缺少镜像名称参数')
             return
-        # page = int(self.get_argument("page", 1))
-        # size = int(self.get_argument('size', options.page_size))
-        total, tag_list = await self.registry_api.get_images_tags(image)
+        page = int(self.get_argument("page", 1))
+        size = int(self.get_argument('size', options.page_size))
+        total, tag_list = await self.registry_api.get_images_tags(image, page, size)
         self.json_success({
             'total': total,
             'data': tag_list

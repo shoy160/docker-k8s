@@ -38,9 +38,9 @@ class ImageViewHandler(BaseHandler):
     @tornado.web.authenticated
     async def get(self, *args):
         image = args[0]
-        # page = int(self.get_argument("page", 1))
-        # size = int(self.get_argument('size', options.page_size))
-        total, tag_list = await self.registry_api.get_images_tags(image)
+        page = int(self.get_argument("page", 1))
+        size = int(self.get_argument('size', options.page_size))
+        total, tag_list = await self.registry_api.get_images_tags(image, page, size)
         current_tag = None
         version = None
         if options.enable_k8s:
@@ -66,7 +66,9 @@ class ImageViewHandler(BaseHandler):
                     tag['publish_time'] = version['time']
                 else:
                     tag['publish_time'] = ''
-        self.render('tags.html', image=image, total=total,
+        pages = int(math.ceil(float(total) / size))
+        
+        self.render('tags.html', image=image, total=total, pages=pages, currentPage=page, size=size,
                     list=tag_list, user=self.current_user, k8s=version, delete=options.enable_delete)
 
 

@@ -88,7 +88,9 @@
         <thead>
           <tr>
             <th>Registory</th>
-            <th>Tags</th>
+            <th>Tag Count</th>
+            <th>Last Tag</th>
+            <th>Last Update</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -98,7 +100,9 @@
             <td>
               <a href="/image/{{ image }}">{{ image }}</a>
             </td>
-            <td>{{ list[image] }}</td>
+            <td>{{ list[image]['count'] }}</td>
+            <td>{{ list[image]['tag'] }}</td>
+            <td>{{ list[image]['time'] }}</td>
             <td>
               {% if delete %}
               <a href="#" class="btn btn-danger btn-xs b-delete">删除</a>
@@ -109,7 +113,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="3" class="d-footer">
+            <td colspan="5" class="d-footer">
               共 <b>{{ total }}</b> 条记录
               <nav aria-label="Page navigation" class="d-page">
                 <ul class="pagination">

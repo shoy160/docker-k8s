@@ -1,6 +1,8 @@
 # coding:utf-8
 
 import os
+from threading import Thread
+import asyncio
 import logging
 import tornado.web
 from tornado.web import RequestHandler
@@ -9,8 +11,31 @@ from tornado.escape import json_encode
 from helper.api import RegistryApi
 
 
-class RouterConfig(tornado.web.Application):
+def async_run(f):
+    def wrapper(*args, **kwargs):
+        thr = Thread(target=f, args=args, kwargs=kwargs)
+        thr.start()
+    return wrapper
+
+
+# loop = asyncio.get_event_loop()
+
+
+class RouterApplication(tornado.web.Application):
     """ 重置Tornado自带的路有对象 """
+
+    @async_run
+    def preload(self):
+        if 'REGISTRY_URL' in os.environ:
+            self.registry_url = os.environ['REGISTRY_URL']
+        else:
+            self.registry_url = options.registry_url
+        print(self.registry_url)
+        api = RegistryApi(self.registry_url)
+        # thr = Thread(target=api.get_images, args=[1, 100])
+        # thr.start()
+        asyncio.run(api.get_images(1, 100))
+        # loop.run_until_complete(api.get_images(1, 100))
 
     def route(self, url):
         """
@@ -30,7 +55,7 @@ class RouterConfig(tornado.web.Application):
         return register
 
 
-app = RouterConfig(
+app = RouterApplication(
     handlers=[
         (r'/css/(.*)', tornado.web.StaticFileHandler, {'path': 'views/css'}),
         (r'/images/(.*)', tornado.web.StaticFileHandler,

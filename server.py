@@ -2,6 +2,8 @@
 import logging
 import tornado.web
 import tornado.options
+import tornado.httpserver
+import tornado.ioloop
 
 from tornado.options import define, options
 import services.index
@@ -23,10 +25,11 @@ define("enable-delete", default=False, help="Allow Delete Image", type=bool)
 if __name__ == "__main__":
     # 转换命令行
     tornado.options.parse_command_line()
+#     app.preload()  
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
     # http_server.bind(options.port)
-    # http_server.start(2)
     logger = logging.getLogger('server')
     logger.info("listening on " + str(options.port))
+#     tornado.ioloop.PeriodicCallback(f2s, 2000).start()
     tornado.ioloop.IOLoop.instance().start()

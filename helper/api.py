@@ -9,8 +9,7 @@ import logging
 from dateutil.tz import tz
 from datetime import datetime
 from helper.utils import format_size
-from tornado.httpclient import AsyncHTTPClient
-from tornado.httpclient import HTTPRequest
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from helper.cache import CacheHelper
 
 
@@ -30,15 +29,18 @@ def get_local_time(time):
 
 
 class RegistryApi(object):
+
     def __init__(self, registry_url):
         self.registry_url = registry_url
         self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
         self.cache = CacheHelper('registry')
 
     async def __get_api(self, api, headers={}):
 
         try:
             url = self.registry_url + api
+            self.logger.debug("request url:%s" % url)
             client = AsyncHTTPClient()
             req = HTTPRequest(url=url,
                               method='GET', headers=headers, validate_cert=False)
@@ -63,19 +65,53 @@ class RegistryApi(object):
         result = await self.__get_api(api)
         return result.get('tags', [])
 
+    async def __tag_manifest(self, image, tag):
+        api = "/v2/{0}/manifests/{1}".format(image, tag)
+        result = await self.__get_api(api)
+        return {
+            'layers': result.get('fsLayers'),
+            'history': result.get('history')
+        }
+
+    async def __tag_layers(self, image, tag):
+        ''' 标签 层级
+        '''
+        key = "layers:%s:%s" % (image, tag)
+        if self.cache.has(key):
+            return self.cache.get(key)
+        api = "/v2/{0}/manifests/{1}".format(image, tag)
+        result = await self.__get_api(
+            api, {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'})
+        layers = result.get('layers')
+        data = {}
+        total = 0
+        for layer in layers:
+            size = int(layer.get('size'))
+            total += size
+            data[layer.get('digest')] = size
+        tag_layers = {
+            'size': total,
+            'list': data
+        }
+        self.cache.set(key, tag_layers)
+        return tag_layers
+
     async def __tag_time(self, image, tag):
         ''' 标签时间
         '''
         key = "%s:%s" % (image, tag)
         if self.cache.has(key):
             return self.cache.get(key)
-        api = "/v2/{0}/manifests/{1}".format(image, tag)
-        result = await self.__get_api(api)
+        result = await self.__tag_manifest(image, tag)
         topLayer = json.loads(result.get("history")[0].get("v1Compatibility"))
         # 创建时间
         time = get_local_time(topLayer.get("created"))
-        self.cache.set(key, time)
-        return time
+        tag_time = {
+            'id': topLayer.get('id'),
+            'time': time
+        }
+        self.cache.set(key, tag_time)
+        return tag_time
 
     async def __image_time(self, image):
         ''' 镜像时间
@@ -91,7 +127,7 @@ class RegistryApi(object):
             time = await self.__tag_time(image, tag)
             tag_times.append({
                 'tag': tag,
-                'time': time
+                'time': time['time']
             })
         tag_times = sorted(
             tag_times, key=lambda k: k["time"], reverse=True)
@@ -100,48 +136,28 @@ class RegistryApi(object):
         self.cache.set(image, tag_time)
         return tag_time
 
-    async def __tag_layers(self, image, tag):
-        api = "/v2/{0}/manifests/{1}".format(image, tag)
-        result = await self.__get_api(
-            api, {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'})
-        layers = result.get('layers')
-        data = {}
-        total = 0
-        for layer in layers:
-            size = int(layer.get('size'))
-            total += size
-            data[layer.get('digest')] = size
-        return total, data
-
     async def __tag_detail(self, image, tag):
         ''' 获取镜像创建时间
         :param  image:string
         :param  tags:array
         '''
-        api = "/v2/{0}/manifests/{1}".format(image, tag)
-        result = await self.__get_api(api)
-        topLayer = json.loads(result.get("history")[0].get("v1Compatibility"))
-        id = topLayer.get('id')
-        # 创建时间
-        time = get_local_time(topLayer.get("created"))
-        key = "%s:%s" % (image, tag)
-        self.cache.set(key, time)
+        tag_time = await self.__tag_time(image, tag)
+        id = tag_time['id']
+        time = tag_time['time']
         # 镜像层数 & 大小
-        size, layers = await self.__tag_layers(image, tag)
-        return {'id': id[0:11], 'name': tag, 'count': len(layers), 'size': format_size(size), 'time': time}
+        layers = await self.__tag_layers(image, tag)
+        return {'id': id[0:11], 'name': tag, 'count': len(layers['list']), 'size': format_size(layers['size']), 'time': time}
 
     async def get_image_history(self, image, tag):
-        api = "/v2/{0}/manifests/{1}".format(image, tag)
-        result = await self.__get_api(api)
-        size, layers = await self.__tag_layers(image, tag)
+        result = await self.__tag_manifest(image, tag)
+        layers = await self.__tag_layers(image, tag)
 
         history = []
-        fs_layers = result.get('fsLayers')
+        fs_layers = result.get('layers')
         history_list = result.get('history')
         length = len(history_list)
         for i in range(length):
             item = history_list[i]
-            fs_layer = fs_layers[i]
             layer = json.loads(item.get('v1Compatibility'))
             id = layer.get('id')[0:11]
             cmd = layer.get('container_config').get('Cmd')[-1]
@@ -159,11 +175,12 @@ class RegistryApi(object):
                 'time': time,
                 'size': '0B'
             }
-            if fs_layer.get('blobSum') in layers:
+            fs_layer = fs_layers[i]
+            if fs_layer.get('blobSum') in layers['list']:
                 item['size'] = format_size(layers[fs_layer.get('blobSum')])
             history.append(item)
 
-        return {'size': format_size(size), 'count': len(layers), 'history': history}
+        return {'size': format_size(layers['size']), 'count': len(layers), 'history': history}
 
     async def get_images_tags(self, image, page=1, size=10):
         ''' 获取镜像Tags
@@ -176,7 +193,7 @@ class RegistryApi(object):
             time = await self.__tag_time(image, tag)
             tag_times.append({
                 'tag': tag,
-                'time': time
+                'time': time['time']
             })
         tag_times = sorted(
             tag_times, key=lambda k: k["time"], reverse=True)
@@ -202,6 +219,6 @@ class RegistryApi(object):
                     continue
                 docker_images.append(image)
         for image in docker_images[start:start + size]:
-            item = await self.__image_time(image)
-            images_tags.setdefault(image, item)
+            tags = await self.__image_time(image)
+            images_tags.setdefault(image, tags)
         return len(docker_images), images_tags

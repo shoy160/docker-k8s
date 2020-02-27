@@ -1,6 +1,7 @@
 # coding:utf-8
 
 cache_dict = {}
+enable_cache = True
 
 
 class CacheHelper():
@@ -13,6 +14,8 @@ class CacheHelper():
         return "%s:%s" % (self.__region, key)
 
     def has(self, key):
+        if not enable_cache:
+            return False
         cache_key = self.__get_key(key)
         return cache_key in cache_dict
 
@@ -21,6 +24,8 @@ class CacheHelper():
         :param     key:string  缓存键
         :param     value:Object    缓存值,为None时删除
         '''
+        if not enable_cache:
+            return None
         cache_key = self.__get_key(key)
         if value is None:
             del cache_dict[cache_key]
@@ -31,6 +36,8 @@ class CacheHelper():
         ''' 获取缓存值
         :param      key:string  缓存键
         '''
+        if not enable_cache:
+            return None
         cache_key = self.__get_key(key)
         if cache_key in cache_dict:
             return cache_dict[cache_key]

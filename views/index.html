@@ -51,6 +51,29 @@
         right: 26px;
         top: -12px;
       }
+      .table-wrap {
+        position: relative;
+      }
+      .table-loading {
+        content: '页面加载中...';
+        position: absolute;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.42);
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 99;
+        /* opacity: .4; */
+        color: #fff;
+        font-size: 18px;
+        text-align: center;
+        display: none;
+      }
+      .table-loading > div {
+        width: 100%;
+        text-align: center;
+        align-self: center;
+      }
     </style>
   </head>
   <body>
@@ -69,107 +92,107 @@
       <div class="page-header">
         <h2>Docker Registry & K8S</h2>
       </div>
-      <table class="table table-striped table-bordered">
-        <caption>
-          Registories For
-          <b>{{ registry }}</b>
-          <div class="d-search">
-            <div class="input-group">
-              <input
-                type="text"
-                class="form-control"
-                id="txtKeyword"
-                placeholder="输入关键字"
-              />
-              <div class="input-group-addon btn" id="btnSearch">搜索</div>
+      <div class="table-wrap">
+        <table class="table table-striped table-bordered">
+          <caption>
+            Registories For
+            <b>{{ registry }}</b>
+            <div class="d-search">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="txtKeyword"
+                  placeholder="输入关键字"
+                />
+                <div class="input-group-addon btn" id="btnSearch">搜索</div>
+              </div>
             </div>
-          </div>
-        </caption>
-        <thead>
-          <tr>
-            <th>Registory</th>
-            <th>Tag Count</th>
-            <th>Last Tag</th>
-            <th>Last Update</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for image in list %}
-          <tr data-image="{{ image }}">
-            <td>
-              <a href="/image/{{ image }}">{{ image }}</a>
-            </td>
-            <td>{{ list[image]['count'] }}</td>
-            <td>{{ list[image]['tag'] }}</td>
-            <td>{{ list[image]['time'] }}</td>
-            <td>
-              {% if delete %}
-              <a href="#" class="btn btn-danger btn-xs b-delete">删除</a>
-              {% end %}
-            </td>
-          </tr>
-          {% end %}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5" class="d-footer">
-              共 <b>{{ total }}</b> 条记录
-              <nav aria-label="Page navigation" class="d-page">
-                <ul class="pagination">
-                  {% if currentPage > 1 %}
-                  <li>
-                    <a
-                      href="/?page={{ currentPage - 1 }}&size={{ size }}&key={{
-                        key
-                      }}"
-                      aria-label="上一页"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </a>
-                  </li>
-                  {% else %}
-                  <li class="disabled">
-                    <a href="javascript:void(0)" aria-label="上一页">
-                      <span aria-hidden="true">&laquo;</span>
-                    </a>
-                  </li>
-                  {% end %} {% for i in range(pages) %} {% if currentPage == i+1
-                  %}
-                  <li class="active">
-                    <a href="javascript:void(0)">{{ i + 1 }}</a>
-                  </li>
-                  {% else %}
-                  <li>
-                    <a
-                      href="/?page={{ i + 1 }}&size={{ size }}&key={{ key }}"
-                      >{{ i + 1 }}</a
-                    >
-                  </li>
-                  {% end %} {% end %} {% if currentPage < pages %}
-                  <li>
-                    <a
-                      href="/?page={{ currentPage + 1 }}&size={{ size }}&key={{
-                        key
-                      }}"
-                      aria-label="下一页"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </a>
-                  </li>
-                  {% else %}
-                  <li class="disabled">
-                    <a href="javascript:void(0)" aria-label="下一页">
-                      <span aria-hidden="true">&raquo;</span>
-                    </a>
-                  </li>
-                  {% end %}
-                </ul>
-              </nav>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+          </caption>
+          <thead>
+            <tr>
+              <th>Registory</th>
+              <th>Tag Count</th>
+              <th>Last Tag</th>
+              <th>Last Update</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for image in list %}
+            <tr data-image="{{ image }}">
+              <td>
+                <a href="/image/{{ image }}">{{ image }}</a>
+              </td>
+              <td>{{ list[image]['count'] }}</td>
+              <td>{{ list[image]['tag'] }}</td>
+              <td>{{ list[image]['time'] }}</td>
+              <td>
+                {% if delete %}
+                <a href="#" class="btn btn-danger btn-xs b-delete">删除</a>
+                {% end %}
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="d-footer">
+                共 <b>{{ total }}</b> 条记录
+                <nav aria-label="Page navigation" class="d-page">
+                  <ul class="pagination">
+                    {% if currentPage > 1 %}
+                    <li>
+                      <a
+                        href="/?page={{ currentPage - 1 }}&size={{ size }}&key={{ key }}"
+                        aria-label="上一页"
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                      <a href="javascript:void(0)" aria-label="上一页">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                    {% end %} {% for i in range(pages) %} {% if currentPage == i+1 %}
+                    <li class="active">
+                      <a href="javascript:void(0)">{{ i + 1 }}</a>
+                    </li>
+                    {% else %}
+                    <li>
+                      <a
+                        href="/?page={{ i + 1 }}&size={{ size }}&key={{ key }}"
+                        >{{ i + 1 }}</a
+                      >
+                    </li>
+                    {% end %} {% end %} {% if currentPage < pages %}
+                    <li>
+                      <a
+                        href="/?page={{ currentPage + 1 }}&size={{ size }}&key={{ key }}"
+                        aria-label="下一页"
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                      <a href="javascript:void(0)" aria-label="下一页">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                    {% end %}
+                  </ul>
+                </nav>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="table-loading">
+          <div>页面加载中...</div>
+        </div>
+      </div>
     </div>
     <div class="modal fade" tabindex="-1" role="dialog" id="msgModal">
       <div class="modal-dialog" role="document">
@@ -239,46 +262,50 @@
           search()
         }
         var $modal = $('#msgModal')
-        $(document).delegate('.b-delete', 'click', function() {
-          var $tr = $(this).parents('tr'),
-            image = $tr.data('image')
-          $modal
-            .find('.modal-body p')
-            .html('确认要删除镜像' + image + ',以及所有的Tags吗？')
-          $modal.modal()
-          $modal
-            .find('#submitBtn')
-            .unbind('click')
-            .bind('click', function() {
-              var $t = $(this)
-              $t.attr('disabled', 'disabled')
-                .addClass('disabled')
-                .html('删除中...')
-              $.ajax({
-                url: '/api/image/' + image,
-                type: 'delete',
-                dataType: 'json',
-                success: function(json) {
-                  console.log(json)
-                  if (!json.status) {
-                    alert('删除失败！' + json.message)
-                    return
+        $(document)
+          .delegate('.b-delete', 'click', function() {
+            var $tr = $(this).parents('tr'),
+              image = $tr.data('image')
+            $modal
+              .find('.modal-body p')
+              .html('确认要删除镜像' + image + ',以及所有的Tags吗？')
+            $modal.modal()
+            $modal
+              .find('#submitBtn')
+              .unbind('click')
+              .bind('click', function() {
+                var $t = $(this)
+                $t.attr('disabled', 'disabled')
+                  .addClass('disabled')
+                  .html('删除中...')
+                $.ajax({
+                  url: '/api/image/' + image,
+                  type: 'delete',
+                  dataType: 'json',
+                  success: function(json) {
+                    console.log(json)
+                    if (!json.status) {
+                      alert('删除失败！' + json.message)
+                      return
+                    }
+                    alert('删除成功！')
+                    location.reload(true)
+                  },
+                  error: function(json) {
+                    alert(json.responseJSON.message || '删除失败')
+                  },
+                  complete: function() {
+                    $t.removeAttr('disabled')
+                      .removeClass('disabled')
+                      .html('确认')
                   }
-                  alert('删除成功！')
-                  location.reload(true)
-                },
-                error: function(json) {
-                  alert(json.responseJSON.message || '删除失败')
-                },
-                complete: function() {
-                  $t.removeAttr('disabled')
-                    .removeClass('disabled')
-                    .html('确认')
-                }
+                })
               })
-            })
-          return false
-        })
+            return false
+          })
+          .delegate('a[href]', 'click', function() {
+            $('.table-loading').css('display', 'flex')
+          })
       })(jQuery)
     </script>
   </body>

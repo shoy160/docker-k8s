@@ -1,6 +1,7 @@
 # coding:utf-8
 
 import os
+import sys
 from threading import Thread
 import asyncio
 import logging
@@ -18,6 +19,14 @@ def async_run(f):
     return wrapper
 
 
+# def src_path():
+#     if os.getcwd():
+#         return os.getcwd()
+#     if hasattr(sys, '_MEIPASS'):
+#         base_dir = sys._MEIPASS
+#     else:
+#         base_dir = os.path.abspath('.')
+#     return base_dir
 # loop = asyncio.get_event_loop()
 
 
@@ -64,6 +73,8 @@ app = RouterApplication(
     ],
     cookie_secret='ulb7bEIZmwpV23Df3',
     compress_response=True,
+    # template_path=os.path.join(src_path(), "views"),
+    # static_path=os.path.join(src_path(), "static")
     template_path=os.path.join(os.path.dirname(__file__), "../views"),
     static_path=os.path.join(os.path.dirname(__file__), "../static")
 )

@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['server.py'],
-             pathex=['D:\\Projects\\python\\docker-k8s'],
+             pathex=['d:\\Projects\\python\\docker-k8s'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -29,4 +29,4 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=True , icon='favicon.ico')
+          console=True , icon='static\\favicon.ico')

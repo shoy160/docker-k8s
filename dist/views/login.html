@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="icon" href="{{ static_url('favicon.ico')}}">
+    <link href="{{ static_url('css/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ static_url('css/vue-toasted.min.css') }}" rel="stylesheet" />
+    <!-- <link href="{{ static_url('css/font-awesome.min.css') }}" rel="stylesheet" /> -->
+    <link href="https://cdn.bootcss.com/font-awesome/5.9.0/css/all.min.css" rel="stylesheet">
+    <title>登 录</title>
+    <style>
+      body {
+        background-color: #dbdbdb;
+      }
+      .wrap-login {
+        margin: 120px auto;
+        width: 560px;
+        background-color: #fff;
+        padding: 50px 50px 30px 0;
+      }
+      .wrap-login .title {
+        font-size: 26px;
+        color: #666;
+        margin: 0 auto 40px;
+        text-align: center;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="container">
+      <div class="wrap-login">
+        <div class="title">Docker & K8S</div>
+        <form class="form-horizontal" @submit.prevent="loginHandler">
+          <div class="form-group">
+            <label for="account" class="col-sm-4 control-label">登录帐号</label>
+            <div class="col-sm-8">
+              <input
+                type="text"
+                class="form-control"
+                id="account"
+                v-model="account"
+                placeholder="登录帐号"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password" class="col-sm-4 control-label"
+              >登录密码</label
+            >
+            <div class="col-sm-8">
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                v-model="password"
+                placeholder="登录密码"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-4 col-sm-8">
+              <button type="submit" class="btn btn-primary">
+                登 录
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="{{ static_url('js/vue.min.js') }}"></script>
+    <script src="{{ static_url('js/vue-resource.min.js') }}"></script>
+    <script src="{{ static_url('js/vue-toasted.min.js') }}"></script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+    <!-- 生产环境版本，优化了尺寸和速度 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+    <!-- <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script> -->
+    <!-- <script src="https://cdn.bootcss.com/vue-resource/1.5.1/vue-resource.min.js"></script> -->
+    <!-- <script src="https://cdn.bootcss.com/vue-toasted/1.1.27/vue-toasted.min.js"></script> -->
+    <script>
+      Vue.use(Toasted, {
+        iconPack: 'fontawesome',
+        position: 'top-center',
+        duration: 3500,
+        width: 160
+      })
+      var query = (function() {
+        var q = [],
+          qs = location.search
+        if (qs.indexOf('?') >= 0) {
+          qs = qs.substring(1)
+        }
+        if (qs) {
+          qs = qs.split('&')
+        }
+        if (qs.length > 0) {
+          for (var i = 0; i < qs.length; i++) {
+            var qt = qs[i].split('=')
+            q[qt[0]] = decodeURIComponent(qt[1])
+          }
+        }
+        return q
+      })()
+      var app = new Vue({
+        el: '#app',
+        data: {
+          account: '',
+          password: ''
+        },
+        methods: {
+          loginHandler: function() {
+            var formData = new FormData()
+            formData.append('account', this.account)
+            formData.append('password', this.password)
+            this.$http
+              .post('/api/login', formData, {
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                }
+              })
+              .then(json => {
+                console.log('success')
+                location.href = query.next || '/'
+              })
+              .catch(json => {
+                console.log(json.body)
+                console.log(this.$toasted)
+                this.$toasted.error(json.body.message, {
+                  icon: 'times'
+                })
+              })
+          }
+        }
+      })
+    </script>
+  </body>
+</html>

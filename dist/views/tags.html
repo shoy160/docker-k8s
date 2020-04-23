@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="icon" href="{{ static_url('favicon.ico') }}" />
+    <link href="{{ static_url('css/bootstrap.min.css') }}" rel="stylesheet" />
+    <script src="{{ static_url('js/jquery.min.js') }}"></script>
+    <script src="{{ static_url('js/bootstrap.min.js') }}"></script>
+    <title>{{ image }} Tags</title>
+    <style>
+      .container {
+        position: relative;
+      }
+      #user {
+        position: absolute;
+        right: 30px;
+        top: 7px;
+      }
+      tfoot {
+        background-color: #f9f9f9;
+        color: #666;
+      }
+      .d-footer {
+        position: relative;
+        padding: 15px !important;
+      }
+      .d-page {
+        position: absolute;
+        right: 26px;
+        top: -12px;
+      }
+      .table-wrap {
+        position: relative;
+      }
+      .table-loading {
+        content: '页面加载中...';
+        position: absolute;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.42);
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 99;
+        /* opacity: .4; */
+        color: #fff;
+        font-size: 18px;
+        text-align: center;
+        display: none;
+      }
+      .table-loading > div {
+        width: 100%;
+        text-align: center;
+        align-self: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="container">
+      <ol class="breadcrumb">
+        <li><a href="/">Home</a></li>
+        <li class="active">{{ image }}</li>
+      </ol>
+      <div class="dropdown" id="user">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+          {{ user }} <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="/logout">退出</a></li>
+        </ul>
+      </div>
+      <div class="page-header">
+        <h2>{{ image }} <small>Tags</small></h2>
+      </div>
+      <div class="table-wrap">
+        <table class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tag</th>
+              <th>Layers</th>
+              <th>Size</th>
+              <th>Created</th>
+              {% if k8s != None %}
+              <th>Published</th>
+              {% end %}
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in list %}
+            <tr data-image="{{ image }}" data-tag="{{ item['name'] }}">
+              <td>
+                <a href="/tag/{{ image }}/{{ item['name'] }}">{{
+                  item['id']
+                }}</a>
+              </td>
+              <td>
+                <a href="/tag/{{ image }}/{{ item['name'] }}">
+                  {{ item['name'] }}
+                </a>
+                {% if 'is_current' in item and item['is_current'] %}
+                <sup class="text-success"><b>k8s</b></sup>
+                {% end %}
+              </td>
+              <td>{{ item['count'] }}</td>
+              <td>{{ item['size'] }}</td>
+              <td>{{ item['time'] }}</td>
+              {% if k8s != None %}
+              <td>{{ item['publish_time'] }}</td>
+              {% end %}
+              <td>
+                {% if k8s != None %}
+                <a href="#" class="btn btn-success btn-sm b-publish">发布K8S</a>
+                {% end %} {% if delete %}
+                <a href="#" class="btn btn-danger btn-sm b-delete">删除</a>
+                {% end %}
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+          <tfoot>
+            <tr>
+              {% set cols = 6 if k8s == None else 7 %}
+              <td colspan="{{ cols }}" class="d-footer">
+                共 <b>{{ total }}</b> 条记录
+                <nav aria-label="Page navigation" class="d-page">
+                  <ul class="pagination">
+                    {% if currentPage > 1 %}
+                    <li>
+                      <a
+                        href="?page={{ currentPage - 1 }}&size={{ size }}"
+                        aria-label="上一页"
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                      <a href="javascript:void(0)" aria-label="上一页">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                    {% end %} {% for i in range(pages) %} {% if currentPage == i+1 %}
+                    <li class="active">
+                      <a href="javascript:void(0)">{{ i + 1 }}</a>
+                    </li>
+                    {% else %}
+                    <li>
+                      <a href="?page={{ i + 1 }}&size={{ size }}">{{ i + 1 }}</a>
+                    </li>
+                    {% end %} {% end %} {% if currentPage < pages %}
+                    <li>
+                      <a
+                        href="?page={{ currentPage + 1 }}&size={{ size }}"
+                        aria-label="下一页"
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                      <a href="javascript:void(0)" aria-label="下一页">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                    {% end %}
+                  </ul>
+                </nav>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="table-loading">
+          <div>页面加载中...</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" tabindex="-1" role="dialog" id="msgModal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title">消息提醒</h4>
+          </div>
+          <div class="modal-body">
+            <p>One fine body&hellip;</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">
+              取消
+            </button>
+            <button type="button" class="btn btn-primary" id="submitBtn">
+              确定
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      ;(function($, S) {
+        var $modal = $('#msgModal')
+        $(document)
+          .delegate('.b-publish', 'click', function() {
+            var $tr = $(this).parents('tr'),
+              image = $tr.data('image'),
+              tag = $tr.data('tag')
+            $modal
+              .find('.modal-body p')
+              .html('确认要将' + image + ':' + tag + '发布到K8S吗？')
+            $modal.modal()
+            $modal
+              .find('#submitBtn')
+              .unbind('click')
+              .bind('click', function() {
+                var $t = $(this)
+                $t.attr('disabled', 'disabled')
+                  .addClass('disabled')
+                  .html('发布中...')
+                $.ajax({
+                  url: '/api/k8s/' + image,
+                  type: 'put',
+                  dataType: 'json',
+                  data: {
+                    image: image,
+                    tag: tag
+                  },
+                  success: function(json) {
+                    console.log(json)
+                    if (!json.status) {
+                      alert('发送失败！' + json.message)
+                      return
+                    }
+                    alert('发布成功！')
+                    location.reload(true)
+                  },
+                  error: function(json) {
+                    alert(json.responseJSON.message || '发布失败')
+                  },
+                  complete: function() {
+                    $t.removeAttr('disabled')
+                      .removeClass('disabled')
+                      .html('确认')
+                  }
+                })
+              })
+            return false
+          })
+          .delegate('.b-delete', 'click', function() {
+            var $tr = $(this).parents('tr'),
+              image = $tr.data('image'),
+              tag = $tr.data('tag')
+            $modal
+              .find('.modal-body p')
+              .html('确认要删除镜像' + image + ':' + tag + '吗？')
+            $modal.modal()
+            $modal
+              .find('#submitBtn')
+              .unbind('click')
+              .bind('click', function() {
+                var $t = $(this)
+                $t.attr('disabled', 'disabled')
+                  .addClass('disabled')
+                  .html('删除中...')
+                $.ajax({
+                  url: '/api/image/' + image,
+                  type: 'delete',
+                  dataType: 'json',
+                  data: {
+                    tag: tag
+                  },
+                  success: function(json) {
+                    console.log(json)
+                    if (!json.status) {
+                      alert('删除失败！' + json.message)
+                      return
+                    }
+                    alert('删除成功！')
+                    location.reload(true)
+                  },
+                  error: function(json) {
+                    alert(json.responseJSON.message || '删除失败')
+                  },
+                  complete: function() {
+                    $t.removeAttr('disabled')
+                      .removeClass('disabled')
+                      .html('确认')
+                  }
+                })
+              })
+            return false
+          })
+          .delegate('a[href]', 'click', function() {
+            if (
+              $(this).attr('href') == 'javascript:void(0)' ||
+              $(this)
+                .parent()
+                .hasClass('active')
+            ) {
+              return false
+            }
+            $('.table-loading').css('display', 'flex')
+          })
+      })(jQuery)
+    </script>
+  </body>
+</html>

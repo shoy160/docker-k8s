@@ -176,8 +176,10 @@ class RegistryApi(object):
                 'size': '0B'
             }
             fs_layer = fs_layers[i]
-            if fs_layer.get('blobSum') in layers['list']:
-                item['size'] = format_size(layers[fs_layer.get('blobSum')])
+            blobSum = fs_layer.get('blobSum')
+            layer_list = layers['list']
+            if blobSum in layer_list:
+                item['size'] = format_size(layer_list[blobSum])
             history.append(item)
 
         return {'size': format_size(layers['size']), 'count': len(layers), 'history': history}
